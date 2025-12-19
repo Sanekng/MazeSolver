@@ -1,5 +1,6 @@
 from collections import deque
 import heapq
+import time
 
 maze_grid = [
     [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -8,8 +9,26 @@ maze_grid = [
     [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
     [1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1],
     [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1],
+    [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1],
+    [1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1],
+    [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1],
+    [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+    [1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1],
+    [1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
@@ -49,49 +68,60 @@ def build_graph(grid):
 
 
 def dfs_graph(graph, start, end):
-    stack = [start]
-    visited = set([start])
-    parent = {start: None}
-
-    while stack:
-        v = stack.pop()
-        if v == end:
-            path = []
-            while v is not None:
-                path.append(v)
-                v = parent[v]
-            return path[::-1], visited
+    visited = set()
+    path = []
+    all_visited = set()
+    
+    def dfs_recursive(current):
+        nonlocal path, visited, all_visited
         
-        for neigh in graph[v]:
-            if neigh not in visited:
-                visited.add(neigh)
-                parent[neigh] = v
-                stack.append(neigh)
-
-    return [], visited
+        visited.add(current)
+        all_visited.add(current)
+        path.append(current)
+       
+        if current == end:
+            return True
+        
+        
+        for neighbor in graph.get(current, []):
+            if neighbor not in visited:
+                if dfs_recursive(neighbor):
+                    return True
+        
+        path.pop()
+        visited.remove(current)
+        return False
+    
+    success = dfs_recursive(start)
+    
+    if success:
+        return path, all_visited
+    else:
+        return [], all_visited
 
 
 def bfs_graph(graph, start, end):
-    queue = deque([start])
+    queue = deque()
+    queue.append([start])
     visited = set([start])
-    parent = {start: None}
-
+    all_visited = set([start])
+    
     while queue:
-        v = queue.popleft()
-        if v == end:
-            path = []
-            while v is not None:
-                path.append(v)
-                v = parent[v]
-            return path[::-1], visited
+        current_path = queue.popleft()
+        current_node = current_path[-1]
         
-        for neigh in graph[v]:
-            if neigh not in visited:
-                visited.add(neigh)
-                parent[neigh] = v
-                queue.append(neigh)
+        if current_node == end:
+            return current_path, all_visited
 
-    return [], visited
+        for neighbor in graph.get(current_node, []):
+            if neighbor not in visited:
+                visited.add(neighbor)
+                all_visited.add(neighbor)
+                new_path = current_path.copy()
+                new_path.append(neighbor)
+                queue.append(new_path)
+    
+    return [], all_visited
 
 
 def astar_graph(graph, start, end):
@@ -126,12 +156,60 @@ def astar_graph(graph, start, end):
 
     return [], visited
 
+def compare_algorithms(graph, start, end):
+    print("Efficiency Metrics")
+
+    results = {}
+
+    # DFS
+    t0 = time.perf_counter()
+    dfs_path, dfs_vis = dfs_graph(graph, start, end)
+    t1 = time.perf_counter()
+    results["DFS"] = {
+        "time": t1 - t0,
+        "visited": len(dfs_vis),
+        "path_len": len(dfs_path)
+    }
+
+    # BFS
+    t0 = time.perf_counter()
+    bfs_path, bfs_vis = bfs_graph(graph, start, end)
+    t1 = time.perf_counter()
+    results["BFS"] = {
+        "time": t1 - t0,
+        "visited": len(bfs_vis),
+        "path_len": len(bfs_path)
+    }
+
+    # A*
+    t0 = time.perf_counter()
+    astar_path, astar_vis = astar_graph(graph, start, end)
+    t1 = time.perf_counter()
+    results["A*"] = {
+        "time": t1 - t0,
+        "visited": len(astar_vis),
+        "path_len": len(astar_path)
+    }
+
+    # PRINT SUMMARY
+    print("\nAlgorithm | Visited | Path Length | Time (sec)")
+    print("-" * 50)
+
+    for name, r in results.items():
+        print(f"{name:8} | {r['visited']:9} | {r['path_len']:11} | {r['time']:.6f}")
+
+    print("-" * 50)
+    return results
+
+
 
 def demo():
     start = (0, 1)
-    end = (7, 19)
+    end = (7, 1)
     
     graph = build_graph(maze_grid)
+    for i in graph:
+        print(i, " : ", graph[i])
 
     print_maze(maze_grid)
 
@@ -146,6 +224,8 @@ def demo():
     astar_path, astar_vis = astar_graph(graph, start, end)
     print("\nA*:")
     print_maze(maze_grid, astar_path, astar_vis)
+    
+    compare_algorithms(graph, start, end)
 
 
 if __name__ == "__main__":
